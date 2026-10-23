@@ -152,6 +152,11 @@ table.list-t{border-collapse:collapse;width:100%;font-size:14px}
 .legend i{width:10px;height:10px;border-radius:50%;background:var(--cc)}
 input.hue{width:90px;accent-color:var(--cc)}
 .pair.full{color:color-mix(in srgb,var(--cc) 55%,var(--fg))}
+.mast-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.theme-btn{display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--head-fg);border:1.5px solid color-mix(in srgb,var(--head-fg) 55%,var(--head));border-radius:999px;padding:5px 14px;font-weight:600;font-size:13px;cursor:pointer}
+.theme-btn:hover{background:color-mix(in srgb,var(--head-fg) 14%,var(--head))}
+.theme-btn .ico{width:14px;height:14px;border-radius:50%;background:var(--head-fg);box-shadow:inset -5px -2px 0 0 var(--head)}
+.theme-btn.is-dark .ico{box-shadow:none;outline:2px dotted var(--head-fg);outline-offset:2px;width:10px;height:10px}
 /* لوحة المديرة */
 .director{border:2px solid var(--accent);background:var(--surface)}
 .director h3{color:var(--accent)}
@@ -192,7 +197,10 @@ textarea{width:100%;min-height:120px;border:1px solid var(--line-strong);border-
       <h1 id="schoolName">مدرسة المبادرة للبنات</h1>
       <div class="sub">جدول الحصص الذكي · العام الدراسي <span id="yearLbl">2026–2027</span></div>
     </div>
-    <span class="status" id="status"><i></i><span>جارٍ التحميل…</span></span>
+    <div class="mast-tools">
+      <button class="theme-btn" id="btnTheme" type="button" aria-label="تبديل الوضع الليلي والنهاري"><span class="ico" aria-hidden="true"></span><span id="themeLbl">الوضع الليلي</span></button>
+      <span class="status" id="status"><i></i><span>جارٍ التحميل…</span></span>
+    </div>
   </header>
 
   <div class="toolbar">
@@ -480,7 +488,7 @@ async function initStore(){
   let db = null;
   try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch(e){ db = null; }
   if (!db){
-    if (!S){ S = sampleData(); saveLocal(); }
+    if (!S){ S = sampleData(); S.tt = autoSchedule(S).tt; saveLocal(); }
     setStatus("ok", "محفوظ تلقائياً على هذا الجهاز — احفظي نسخة احتياطية دورياً");
     render(); return;
   }
@@ -1004,6 +1012,29 @@ $("#view").addEventListener("click", e => {
   if (!editMode || !canWrite) return;
   const td = e.target.closest("td.cell"); if (td) openEditor(td.dataset.k);
 });
+
+/* ---------- الوضع الليلي والنهاري ---------- */
+const THEME_KEY = "mubadara-theme";
+function currentDark(){
+  const a = document.documentElement.getAttribute("data-theme");
+  if (a) return a === "dark";
+  return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+}
+function paintThemeBtn(){
+  const d = currentDark();
+  $("#btnTheme").classList.toggle("is-dark", d);
+  $("#themeLbl").textContent = d ? "الوضع النهاري" : "الوضع الليلي";
+}
+function setTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem(THEME_KEY, t); } catch(e){}
+  paintThemeBtn();
+}
+try { const saved = localStorage.getItem(THEME_KEY); if (saved === "dark" || saved === "light") document.documentElement.setAttribute("data-theme", saved); } catch(e){}
+$("#btnTheme").onclick = () => setTheme(currentDark() ? "light" : "dark");
+if (window.matchMedia) { const mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", paintThemeBtn); }
+new MutationObserver(paintThemeBtn).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+paintThemeBtn();
 
 initStore();
 })();

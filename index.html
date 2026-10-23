@@ -163,6 +163,12 @@ input.hue{width:90px;accent-color:var(--cc)}
 .theme-btn:hover{background:color-mix(in srgb,var(--head-fg) 14%,var(--head))}
 .theme-btn .ico{width:14px;height:14px;border-radius:50%;background:var(--head-fg);box-shadow:inset -5px -2px 0 0 var(--head)}
 .theme-btn.is-dark .ico{box-shadow:none;outline:2px dotted var(--head-fg);outline-offset:2px;width:10px;height:10px}
+.credit-foot{text-align:center;padding-block:18px 4px}
+.gold-pill{display:inline-block;background:#0b2a5b;border:2px solid #e2b33a;border-radius:999px;padding:6px 26px;animation:goldPulse 1.6s ease-in-out infinite}
+.gold-pill b{font-family:var(--f-display);font-size:17px;font-weight:700;background:linear-gradient(110deg,#c9971c 0%,#f5c84a 30%,#fff6c9 45%,#f5c84a 60%,#c9971c 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:goldShine 2.4s linear infinite}
+@keyframes goldShine{from{background-position:120% 0}to{background-position:-130% 0}}
+@keyframes goldPulse{0%,100%{transform:scale(1);box-shadow:0 0 6px rgba(245,190,40,.35)}50%{transform:scale(1.05);box-shadow:0 0 20px rgba(245,190,40,.75)}}
+@media (prefers-reduced-motion:reduce){ .gold-pill,.gold-pill b{animation:none} }
 /* لوحة المديرة */
 .director{border:2px solid var(--accent);background:var(--surface)}
 .director h3{color:var(--accent)}
@@ -234,6 +240,7 @@ textarea{width:100%;min-height:120px;border:1px solid var(--line-strong);border-
   </nav>
 
   <section id="view"></section>
+  <footer class="credit-foot"><span class="gold-pill"><b>تصميم علي الصفار</b></span></footer>
 </div>
 <div id="modalRoot"></div>
 
@@ -937,9 +944,9 @@ function applyDirector(){
 
 /* زر بتأكيد داخلي بدلاً من confirm() */
 function armDelete(btn, fn, label){
-  if (btn.dataset.armed){ delete btn.dataset.armed; fn(); return; }
-  btn.dataset.armed = "1"; const old = btn.textContent; btn.textContent = label || "تأكيد؟"; btn.classList.add("arm", "danger");
-  setTimeout(() => { if (btn.isConnected && btn.dataset.armed){ delete btn.dataset.armed; btn.textContent = old; btn.classList.remove("arm"); } }, 3500);
+  if (btn.dataset.armed){ delete btn.dataset.armed; if (btn.dataset.label){ btn.textContent = btn.dataset.label; delete btn.dataset.label; } btn.classList.remove("arm"); fn(); return; }
+  btn.dataset.armed = "1"; const old = btn.textContent; btn.dataset.label = old; btn.textContent = label || "تأكيد؟"; btn.classList.add("arm", "danger");
+  setTimeout(() => { if (btn.isConnected && btn.dataset.armed){ delete btn.dataset.armed; delete btn.dataset.label; btn.textContent = old; btn.classList.remove("arm"); } }, 3500);
 }
 
 let _dl;
